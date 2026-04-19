@@ -28,10 +28,14 @@ app.post('/shopify-webhook', async (req, res) => {
     const shopifyOrder = req.body;
     const shopifyOrderNumber = shopifyOrder.order_number;
     const amount = shopifyOrder.total_price;
+
+    // Fix phone - use customer phone or fallback to business number
     const rawPhone = shopifyOrder.billing_address?.phone || 
                      shopifyOrder.shipping_address?.phone || 
-                     shopifyOrder.phone || '9999999999';
+                     shopifyOrder.phone || '9900406000';
     const customerPhone = rawPhone.replace(/\D/g, '').slice(-10);
+
+    // Fix customer ID
     const customerId = shopifyOrder.customer?.id?.toString() || 
                        `CUST_${shopifyOrderNumber}`;
 
