@@ -29,17 +29,25 @@ app.post('/shopify-webhook', async (req, res) => {
     const shopifyOrderNumber = shopifyOrder.order_number;
     const amount = shopifyOrder.total_price;
 
-    // Fix phone - use customer phone or fallback to business number
+    // ✅ Only process Cashfree orders - skip Snapmint and others
+    const paymentGateway = shopifyOrder.payment_gateway || '';
+    if (!paymentGateway.toLowerCase().includes('cashfree')) {
+      console.log(`⏭️ Skipping non-Cashfree order #${shopifyOrderNumber} - Gateway: ${paymentGateway}`);
+      return res.status(200).json({ success: true, message: 'Skipped non-Cashfree order' });
+    }
+
+    // Fix phone number
     const rawPhone = shopifyOrder.billing_address?.phone || 
                      shopifyOrder.shipping_address?.phone || 
                      shopifyOrder.phone || '9900406000';
-    const customerPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    const customerPhone = cleanPhone.length === 10 ? cleanPhone : '9900406000';
 
     // Fix customer ID
     const customerId = shopifyOrder.customer?.id?.toString() || 
                        `CUST_${shopifyOrderNumber}`;
 
-    console.log(`New Shopify Order received: #${shopifyOrderNumber}`);
+    console.log(`New Cashfree Order received: #${shopifyOrderNumber}`);
     const orderId = generateOrderId(shopifyOrderNumber);
     console.log(`Creating Cashfree order: ${orderId}`);
 
