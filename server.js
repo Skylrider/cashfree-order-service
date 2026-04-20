@@ -29,10 +29,15 @@ app.post('/shopify-webhook', async (req, res) => {
     const shopifyOrderNumber = shopifyOrder.order_number;
     const amount = shopifyOrder.total_price;
 
-    // ✅ Only process Cashfree orders - skip Snapmint and others
+    // ✅ Check gateway from BOTH payment_gateway field AND order tags
     const paymentGateway = shopifyOrder.payment_gateway || '';
-    if (!paymentGateway.toLowerCase().includes('cashfree')) {
-      console.log(`⏭️ Skipping non-Cashfree order #${shopifyOrderNumber} - Gateway: ${paymentGateway}`);
+    const tags = shopifyOrder.tags || '';
+
+    console.log(`Order #${shopifyOrderNumber} - Gateway: ${paymentGateway} - Tags: ${tags}`);
+
+    if (!paymentGateway.toLowerCase().includes('cashfree') && 
+        !tags.toLowerCase().includes('cashfree')) {
+      console.log(`⏭️ Skipping non-Cashfree order #${shopifyOrderNumber}`);
       return res.status(200).json({ success: true, message: 'Skipped non-Cashfree order' });
     }
 
