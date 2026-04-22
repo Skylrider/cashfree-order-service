@@ -29,18 +29,6 @@ app.post('/shopify-webhook', async (req, res) => {
     const shopifyOrderNumber = shopifyOrder.order_number;
     const amount = shopifyOrder.total_price;
 
-    // ✅ Check gateway from BOTH payment_gateway field AND order tags
-    const paymentGateway = shopifyOrder.payment_gateway || '';
-    const tags = shopifyOrder.tags || '';
-
-    console.log(`Order #${shopifyOrderNumber} - Gateway: ${paymentGateway} - Tags: ${tags}`);
-
-    if (!paymentGateway.toLowerCase().includes('cashfree') && 
-        !tags.toLowerCase().includes('cashfree')) {
-      console.log(`⏭️ Skipping non-Cashfree order #${shopifyOrderNumber}`);
-      return res.status(200).json({ success: true, message: 'Skipped non-Cashfree order' });
-    }
-
     // Fix phone number
     const rawPhone = shopifyOrder.billing_address?.phone || 
                      shopifyOrder.shipping_address?.phone || 
@@ -52,7 +40,7 @@ app.post('/shopify-webhook', async (req, res) => {
     const customerId = shopifyOrder.customer?.id?.toString() || 
                        `CUST_${shopifyOrderNumber}`;
 
-    console.log(`New Cashfree Order received: #${shopifyOrderNumber}`);
+    console.log(`New Order received: #${shopifyOrderNumber}`);
     const orderId = generateOrderId(shopifyOrderNumber);
     console.log(`Creating Cashfree order: ${orderId}`);
 
